@@ -30,92 +30,12 @@ Full-stack application that resolves an AWS EC2 instance by IP address and displ
 
 ## Safety Guard
 
-**⚠️ This system is designed to be READ-ONLY and non-destructive by default.**
+This system is **READ-ONLY by default** and does not allow destructive EC2 operations.
 
-### Design Philosophy
+A backend safety flag prevents EC2 termination or modification unless explicitly enabled:
 
-This AWS monitoring application is built with a **safety-first architecture** to prevent accidental or unauthorized destructive operations on your EC2 infrastructure. Even if termination or modification features are added in the future, they will **NOT execute** unless explicitly enabled via configuration.
-
-### What is Protected?
-
-The safety guard prevents:
-- **EC2 instance termination**
-- **EC2 instance state modifications** (stop, reboot, etc.)
-- **Any destructive AWS operations**
-
-All monitoring and read operations (DescribeInstances, GetMetricStatistics, etc.) work normally.
-
-### How It Works
-
-A centralized `Ec2SafetyGuard` service enforces the safety policy:
-
-```java
-@Service
-public class Ec2SafetyGuard {
-    @Value("${aws.safety.allow-instance-termination:false}")
-    private boolean allowInstanceTermination;
-
-    public void checkTerminationAllowed() {
-        if (!allowInstanceTermination) {
-            throw new TerminationNotAllowedException(
-                "EC2 termination is disabled by safety policy"
-            );
-        }
-    }
-}
-```
-
-Any future code that attempts destructive operations **must** call this guard first:
-
-```java
-// Example of how future termination code would be protected:
-public void terminateInstance(String instanceId) {
-    ec2SafetyGuard.checkTerminationAllowed();  // ← Fails by default
-    // ... termination logic ...
-}
-```
-
-### Configuration
-
-The safety flag is controlled by:
-
-**Option 1: application.properties**
 ```properties
-aws.safety.allow-instance-termination=false  # Default: false
-```
-
-**Option 2: Environment Variable**
-```bash
-export AWS_SAFETY_ALLOW_INSTANCE_TERMINATION=true
-```
-
-### Default Behavior
-
-✅ **Default (Production Safe):**
-- `ALLOW_INSTANCE_TERMINATION=false`
-- System operates in **READ-ONLY mode**
-- All monitoring features work normally
-- Any destructive operation throws `TerminationNotAllowedException` (HTTP 403)
-
-⚠️ **Enabled (Use with Caution):**
-- `ALLOW_INSTANCE_TERMINATION=true`
-- Destructive operations are permitted
-- **Only enable in controlled environments with proper authorization**
-
-### Why This Matters
-
-1. **Prevents Accidents:** Even if someone adds termination code in the future, it won't execute in production without explicit opt-in
-2. **Clear Intent:** The codebase explicitly declares itself as a monitoring tool, not a management tool
-3. **Production Safety:** No configuration mistakes or code bugs can accidentally terminate instances
-4. **Audit Trail:** Any attempt to perform destructive operations is logged and blocked by default
-5. **Future-Proof:** Protects against future feature additions that could be dangerous
-
-### Best Practices
-
-- ❌ **Never enable termination in production** unless you have a specific, documented need
-- ✅ **Keep the default (`false`) in all environments**
-- ✅ **Review any code that calls `ec2SafetyGuard.checkTerminationAllowed()`**
-- ✅ **Treat enabling this flag as a security-sensitive operation**
+aws.safety.allow-instance-termination=false
 
 ---
 
