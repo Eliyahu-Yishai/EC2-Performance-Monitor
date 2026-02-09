@@ -119,17 +119,6 @@ Development proxy forwards:
 }
 ```
 
----
-
-## Notes / Limitations
-
-- Max **5,000 samples** per request (server-side guard)
-- **IPv4 only**
-- Region comes from `.env`
-- **READ-ONLY by design** — No destructive EC2 operations are possible without explicit configuration (see Safety Guard section)
-
----
-
 ## Resources
 
 1. Exception Handling Documentation:  
