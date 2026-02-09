@@ -35,7 +35,8 @@ This system is **READ-ONLY by default** and does not allow destructive EC2 opera
 A backend safety flag prevents EC2 termination or modification unless explicitly enabled:
 
 ```properties
-aws.safety.allow-instance-termination=false```
+aws.safety.allow-instance-termination=false
+```
 
 ---
 
